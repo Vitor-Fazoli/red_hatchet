@@ -1,32 +1,94 @@
 type Subscriber<T> = (state: T) => void
 
-export function hatchet<T extends Record<string, any>>(
+// ─── Storage (coleção) ────────────────────────────────────────────────────────
+
+export type Collection<T extends Record<string, any>> = {
+    add(item: T): void
+    list(): T[]
+    update(item: T): void
+    remove(id: unknown): void
+    $subscribe(fn: Subscriber<T[]>): void
+    $clear(): void
+}
+
+export function storage<T extends Record<string, any>>(
+    key: string,
+    schema: T
+): Collection<T> {
+    const idKey = Object.keys(schema)[0] as keyof T
+    const subs: Subscriber<T[]>[] = []
+
+    function read(): T[] {
+        const raw = localStorage.getItem(key)
+        if (!raw) return []
+        try { return JSON.parse(raw) } catch { return [] }
+    }
+
+    function write(data: T[]) {
+        localStorage.setItem(key, JSON.stringify(data))
+        subs.forEach(fn => fn(data))
+    }
+
+    return {
+        add(item: T) {
+            const data = read()
+            data.push(item)
+            write(data)
+        },
+
+        list(): T[] {
+            return read()
+        },
+
+        update(item: T) {
+            const data = read()
+            const index = data.findIndex(i => i[idKey] === item[idKey])
+            if (index === -1) throw new Error(
+                `[red-hatchet] Item with ${String(idKey)}="${item[idKey]}" not found.`
+            )
+            data[index] = item
+            write(data)
+        },
+
+        remove(id: unknown) {
+            write(read().filter(i => i[idKey] !== id))
+        },
+
+        $subscribe(fn: Subscriber<T[]>) {
+            subs.push(fn)
+        },
+
+        $clear() {
+            write([])
+        }
+    }
+}
+
+// ─── State (estado simples) ───────────────────────────────────────────────────
+
+export type State<T extends Record<string, any>> = T & {
+    $subscribe(fn: Subscriber<T>): void
+    $reset(): void
+}
+
+export function state<T extends Record<string, any>>(
     key: string,
     initial: T
-): T & {
-    $reset(): void
-    $subscribe(fn: Subscriber<T>): void  // ✅ usa T puro, sem os métodos
-} {
+): State<T> {
     const subs: Subscriber<T>[] = []
 
     function read(): T {
         const raw = localStorage.getItem(key)
         if (!raw) return structuredClone(initial)
-        try {
-            return JSON.parse(raw)
-        } catch {
-            return structuredClone(initial)
-        }
+        try { return JSON.parse(raw) } catch { return structuredClone(initial) }
     }
 
-    function write(state: T) {
-        localStorage.setItem(key, JSON.stringify(state))
-        subs.forEach((fn) => fn(state))
+    function write(data: T) {
+        localStorage.setItem(key, JSON.stringify(data))
+        subs.forEach(fn => fn(data))
     }
 
-    const state = read()
-
-    const proxy = new Proxy(state, {
+    const proxy = new Proxy(read(), {
         set(target, prop, value) {
             target[prop as keyof T] = value
             write(target)
@@ -35,17 +97,15 @@ export function hatchet<T extends Record<string, any>>(
     })
 
     Object.defineProperties(proxy, {
-        $reset: {
-            value() {
-                write(structuredClone(initial))
-            }
-        },
         $subscribe: {
-            value(fn: Subscriber<T>) {
-                subs.push(fn)
-            }
+            value(fn: Subscriber<T>) { subs.push(fn) }
+        },
+        $reset: {
+            value() { write(structuredClone(initial)) }
         }
     })
 
-    return proxy as any
+    return proxy as State<T>
 }
+
+export const hatchet = { storage, state }

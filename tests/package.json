@@ -11,7 +11,7 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "red-hatchet": "^0.0.2"
+    "red-hatchet": "^0.0.3"
   },
   "devDependencies": {
     "typescript": "^5.9.3",

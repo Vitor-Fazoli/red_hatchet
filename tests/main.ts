@@ -1,15 +1,19 @@
 import { hatchet } from 'red-hatchet'
 
-const store = hatchet('counter', { count: 0 })
+// Coleção — primeiro campo (id) vira a chave
+const users = hatchet.storage('users', { id: 0, name: '' })
 
-const el = document.getElementById('count') as HTMLSpanElement
+users.$subscribe(list => console.log('users updated:', list))
 
-function render(state: typeof store) {
-    el.textContent = String(state.count)
-}
+users.add({ id: 1, name: 'Vitor' })
+users.add({ id: 2, name: 'Ana' })
+users.update({ id: 1, name: 'Vitor F.' })
+users.remove(2)
+console.log(users.list())
 
-store.$subscribe(render)
-render(store)
+// Estado simples — reativo via Proxy
+const theme = hatchet.state('theme', { value: 'dark' })
 
-document.getElementById('inc')!.onclick = () => store.count++
-document.getElementById('reset')!.onclick = () => store.$reset()
+theme.$subscribe(s => console.log('theme changed:', s))
+
+theme.value = 'light' // salva automaticamente no localStorage
