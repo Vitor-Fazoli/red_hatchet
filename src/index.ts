@@ -5,15 +5,13 @@ export function hatchet<T extends Record<string, any>>(
     initial: T
 ): T & {
     $reset(): void
-    $subscribe(fn: Subscriber<T>): void
+    $subscribe(fn: Subscriber<T>): void  // ✅ usa T puro, sem os métodos
 } {
     const subs: Subscriber<T>[] = []
 
     function read(): T {
         const raw = localStorage.getItem(key)
-
         if (!raw) return structuredClone(initial)
-
         try {
             return JSON.parse(raw)
         } catch {
@@ -42,7 +40,6 @@ export function hatchet<T extends Record<string, any>>(
                 write(structuredClone(initial))
             }
         },
-
         $subscribe: {
             value(fn: Subscriber<T>) {
                 subs.push(fn)
