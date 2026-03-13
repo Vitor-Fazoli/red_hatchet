@@ -1,6 +1,6 @@
 {
     "name": "red-hatchet",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "description": "",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
@@ -10,7 +10,11 @@
     "scripts": {
         "build": "tsup src/index.ts --dts --format esm,cjs"
     },
-    "keywords": ["local-storage", "typescript", "library"],
+    "keywords": [
+        "local-storage",
+        "typescript",
+        "library"
+    ],
     "author": "Vitor Fazoli",
     "license": "MIT",
     "type": "module",
