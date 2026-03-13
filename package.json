@@ -1,5 +1,5 @@
 {
-    "name": "red_hatchet",
+    "name": "red-hatchet",
     "version": "0.0.1",
     "description": "",
     "main": "dist/index.js",
@@ -13,7 +13,7 @@
     "keywords": ["local-storage", "typescript", "library"],
     "author": "Vitor Fazoli",
     "license": "MIT",
-    "type": "commonjs",
+    "type": "module",
     "devDependencies": {
         "tsup": "^8.5.1",
         "typescript": "^5.9.3"
